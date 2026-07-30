@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      api_url:
+        description: 'Backend API URL to run the Playwright e2e suite against (leave empty to skip e2e)'
+        required: false
+        type: string
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npx tsc -b --noEmit
+      - run: npm run test
+      - name: Production build
+        env:
+          VITE_API_URL: ${{ inputs.api_url || 'http://localhost:3000' }}
+        run: npm run build
+
+  # This repo doesn't have the backend's source, so the e2e job can't spin
+  # one up from scratch the way a monorepo pipeline would. Run it manually
+  # (workflow_dispatch) against a real deployed/staging backend by supplying
+  # api_url — it's skipped on every normal push/PR.
+  e2e:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.api_url != '' }}
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: E2E tests against ${{ inputs.api_url }}
+        env:
+          CI: 'true'
+          VITE_API_URL: ${{ inputs.api_url }}
+        run: npm run test:e2e
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
