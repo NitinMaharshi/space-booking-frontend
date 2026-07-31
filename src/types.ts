@@ -1,5 +1,6 @@
 export type Role = 'VISITOR' | 'MEMBER' | 'ADMIN';
-export type SpaceType = 'DESK' | 'MEETING_ROOM' | 'PRIVATE_OFFICE' | 'EVENT_SPACE';
+export type SpaceType =
+  'DESK' | 'MEETING_ROOM' | 'PRIVATE_OFFICE' | 'EVENT_SPACE';
 export type BookingStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 
 export interface User {
@@ -7,6 +8,7 @@ export interface User {
   email: string;
   fullName: string;
   role: Role;
+  isEmailVerified: boolean;
 }
 
 export interface SpaceAmenity {

@@ -1,5 +1,11 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useAuthStore } from '@/stores/auth-store';
 
 export function ProfilePage() {
@@ -26,6 +32,12 @@ export function ProfilePage() {
           <div>
             <p className="text-muted-foreground">Role</p>
             <Badge variant="secondary">{user.role}</Badge>
+          </div>
+          <div>
+            <p className="text-muted-foreground">Email verification</p>
+            <Badge variant={user.isEmailVerified ? 'success' : 'warning'}>
+              {user.isEmailVerified ? 'Verified' : 'Not verified'}
+            </Badge>
           </div>
         </CardContent>
       </Card>
