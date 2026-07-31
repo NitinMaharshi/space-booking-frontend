@@ -1,13 +1,19 @@
-import * as React from 'react';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 export const Tabs = TabsPrimitive.Root;
 
-export function TabsList({ className, ...props }: React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>) {
+export function TabsList({
+  className,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn('inline-flex h-10 items-center rounded-md bg-muted p-1 text-muted-foreground', className)}
+      className={cn(
+        'inline-flex h-10 items-center rounded-md bg-muted p-1 text-muted-foreground',
+        className,
+      )}
       {...props}
     />
   );

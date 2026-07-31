@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Spinner } from '@/components/ui/spinner';
 import { useAuthStore } from '@/stores/auth-store';
 import type { Role } from '@/types';
-import { Spinner } from '@/components/ui/spinner';
 
 export function ProtectedRoute({ roles }: { roles?: Role[] }) {
   const { user, isInitializing } = useAuthStore();

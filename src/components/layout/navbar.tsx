@@ -1,10 +1,10 @@
-import { Link, useNavigate } from 'react-router-dom';
 import { Building2, LogOut, Moon, Sun } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { useAuthStore } from '@/stores/auth-store';
 import { useDarkMode } from '@/hooks/use-dark-mode';
 import { authApi } from '@/lib/auth-api';
+import { useAuthStore } from '@/stores/auth-store';
 
 export function Navbar() {
   const { user, clearAuth } = useAuthStore();
@@ -57,7 +57,11 @@ export function Navbar() {
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             onClick={toggle}
           >
-            {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {isDark ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
           </Button>
 
           {user ? (

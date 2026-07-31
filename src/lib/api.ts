@@ -29,10 +29,16 @@ async function refreshAccessToken(): Promise<string> {
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
-    const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    const original = error.config as
+      (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
     const isAuthRoute = original?.url?.includes('/auth/');
 
-    if (error.response?.status === 401 && original && !original._retry && !isAuthRoute) {
+    if (
+      error.response?.status === 401 &&
+      original &&
+      !original._retry &&
+      !isAuthRoute
+    ) {
       original._retry = true;
       try {
         refreshPromise ??= refreshAccessToken().finally(() => {
@@ -49,7 +55,10 @@ api.interceptors.response.use(
   },
 );
 
-export function getApiErrorMessage(error: unknown, fallback = 'Something went wrong'): string {
+export function getApiErrorMessage(
+  error: unknown,
+  fallback = 'Something went wrong',
+): string {
   if (axios.isAxiosError(error)) {
     const data = error.response?.data as ApiEnvelope<unknown> | undefined;
     if (data?.message) return data.message;

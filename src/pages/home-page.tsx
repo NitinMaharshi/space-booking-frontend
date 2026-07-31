@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import { CalendarCheck, ShieldCheck, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -11,8 +11,8 @@ export function HomePage() {
           Book the perfect workspace, in seconds
         </h1>
         <p className="max-w-xl text-lg text-muted-foreground">
-          Desks, meeting rooms, private offices, and event spaces — browse availability and reserve
-          instantly.
+          Desks, meeting rooms, private offices, and event spaces — browse
+          availability and reserve instantly.
         </p>
         <div className="flex gap-3">
           <Button size="lg" asChild>
@@ -31,7 +31,8 @@ export function HomePage() {
             <CardTitle className="text-base">Every kind of space</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Hot desks, meeting rooms, private offices, and event halls in one place.
+            Hot desks, meeting rooms, private offices, and event halls in one
+            place.
           </CardContent>
         </Card>
         <Card>
@@ -49,7 +50,8 @@ export function HomePage() {
             <CardTitle className="text-base">Conflict-free booking</CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Our approval workflow guarantees two people can never double-book the same slot.
+            Our approval workflow guarantees two people can never double-book
+            the same slot.
           </CardContent>
         </Card>
       </section>

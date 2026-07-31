@@ -11,11 +11,15 @@ export interface CreateMaintenanceInput {
 export const maintenanceApi = {
   list: (params: { page?: number; limit?: number; spaceId?: string }) =>
     api
-      .get<ApiEnvelope<PaginatedResult<MaintenanceWindow>>>('/maintenance', { params })
+      .get<ApiEnvelope<PaginatedResult<MaintenanceWindow>>>('/maintenance', {
+        params,
+      })
       .then((r) => r.data.data),
 
   create: (data: CreateMaintenanceInput) =>
-    api.post<ApiEnvelope<MaintenanceWindow>>('/maintenance', data).then((r) => r.data.data),
+    api
+      .post<ApiEnvelope<MaintenanceWindow>>('/maintenance', data)
+      .then((r) => r.data.data),
 
   remove: (id: string) => api.delete(`/maintenance/${id}`),
 };
