@@ -1,22 +1,30 @@
-import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
+import { z } from 'zod';
+import { DayAvailabilityTimeline } from '@/components/day-availability-timeline';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { spacesApi } from '@/lib/spaces-api';
-import { bookingsApi } from '@/lib/bookings-api';
+import { Textarea } from '@/components/ui/textarea';
 import { getApiErrorMessage } from '@/lib/api';
+import { bookingsApi } from '@/lib/bookings-api';
+import { spacesApi } from '@/lib/spaces-api';
 import { useAuthStore } from '@/stores/auth-store';
 
 const bookingSchema = z
@@ -67,7 +75,9 @@ export function SpaceDetailsPage() {
     mutationFn: (values: BookingFormValues) =>
       bookingsApi.create({
         spaceId: id!,
-        startTime: new Date(`${values.date}T${values.startTime}:00`).toISOString(),
+        startTime: new Date(
+          `${values.date}T${values.startTime}:00`,
+        ).toISOString(),
         endTime: new Date(`${values.date}T${values.endTime}:00`).toISOString(),
         partySize: values.partySize,
         notes: values.notes,
@@ -79,7 +89,8 @@ export function SpaceDetailsPage() {
       queryClient.invalidateQueries({ queryKey: ['availability', id] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, 'Could not create booking')),
+    onError: (err) =>
+      toast.error(getApiErrorMessage(err, 'Could not create booking')),
   });
 
   if (isLoading) return <Skeleton className="h-64" />;
@@ -92,7 +103,9 @@ export function SpaceDetailsPage() {
           <h1 className="text-2xl font-semibold">{space.name}</h1>
           <Badge variant="secondary">{space.type.replace('_', ' ')}</Badge>
         </div>
-        {space.description && <p className="mt-2 text-muted-foreground">{space.description}</p>}
+        {space.description && (
+          <p className="mt-2 text-muted-foreground">{space.description}</p>
+        )}
         <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-muted-foreground">Capacity</dt>
@@ -105,7 +118,9 @@ export function SpaceDetailsPage() {
         </dl>
         {space.amenities.length > 0 && (
           <div className="mt-4">
-            <h2 className="text-sm font-medium text-muted-foreground">Amenities</h2>
+            <h2 className="text-sm font-medium text-muted-foreground">
+              Amenities
+            </h2>
             <div className="mt-2 flex flex-wrap gap-2">
               {space.amenities.map((a) => (
                 <Badge key={a.id} variant="outline">
@@ -128,22 +143,24 @@ export function SpaceDetailsPage() {
               className="mb-4 w-48"
               aria-label="Check availability for date"
             />
-            {availability && availability.bookings.length === 0 && availability.maintenanceWindows.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Fully available on this date.</p>
+            {availability ? (
+              <DayAvailabilityTimeline
+                bookings={availability.bookings}
+                maintenanceWindows={availability.maintenanceWindows}
+              />
             ) : (
-              <ul className="space-y-1 text-sm">
-                {availability?.bookings.map((b) => (
-                  <li key={b.id} className="text-destructive">
-                    Booked: {format(new Date(b.startTime), 'p')} – {format(new Date(b.endTime), 'p')}
-                  </li>
-                ))}
-                {availability?.maintenanceWindows.map((m) => (
-                  <li key={m.id} className="text-amber-600">
-                    Maintenance: {format(new Date(m.startTime), 'p')} – {format(new Date(m.endTime), 'p')} ({m.reason})
-                  </li>
-                ))}
-              </ul>
+              <Skeleton className="h-64" />
             )}
+            <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="h-2.5 w-2.5 rounded-sm bg-destructive" />{' '}
+                Booked
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="h-2.5 w-2.5 rounded-sm bg-amber-500" />{' '}
+                Maintenance
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -159,7 +176,9 @@ export function SpaceDetailsPage() {
                 <Link to="/login">Log in to book</Link>
               </Button>
             ) : user.role === 'ADMIN' ? (
-              <p className="text-sm text-muted-foreground">Admins manage bookings from the admin panel.</p>
+              <p className="text-sm text-muted-foreground">
+                Admins manage bookings from the admin panel.
+              </p>
             ) : (
               <Dialog open={open} onOpenChange={setOpen}>
                 <DialogTrigger asChild>
@@ -167,7 +186,9 @@ export function SpaceDetailsPage() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Request a booking for {space.name}</DialogTitle>
+                    <DialogTitle>
+                      Request a booking for {space.name}
+                    </DialogTitle>
                   </DialogHeader>
                   <form
                     className="grid gap-4"
@@ -177,27 +198,53 @@ export function SpaceDetailsPage() {
                     <div className="grid gap-1.5">
                       <Label htmlFor="date">Date</Label>
                       <Input id="date" type="date" {...register('date')} />
-                      {errors.date && <p className="text-sm text-destructive">{errors.date.message}</p>}
+                      {errors.date && (
+                        <p className="text-sm text-destructive">
+                          {errors.date.message}
+                        </p>
+                      )}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="grid gap-1.5">
                         <Label htmlFor="startTime">Start</Label>
-                        <Input id="startTime" type="time" {...register('startTime')} />
+                        <Input
+                          id="startTime"
+                          type="time"
+                          {...register('startTime')}
+                        />
                         {errors.startTime && (
-                          <p className="text-sm text-destructive">{errors.startTime.message}</p>
+                          <p className="text-sm text-destructive">
+                            {errors.startTime.message}
+                          </p>
                         )}
                       </div>
                       <div className="grid gap-1.5">
                         <Label htmlFor="endTime">End</Label>
-                        <Input id="endTime" type="time" {...register('endTime')} />
-                        {errors.endTime && <p className="text-sm text-destructive">{errors.endTime.message}</p>}
+                        <Input
+                          id="endTime"
+                          type="time"
+                          {...register('endTime')}
+                        />
+                        {errors.endTime && (
+                          <p className="text-sm text-destructive">
+                            {errors.endTime.message}
+                          </p>
+                        )}
                       </div>
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="partySize">Party size</Label>
-                      <Input id="partySize" type="number" min={1} max={space.capacity} {...register('partySize')} />
+                      <Input
+                        id="partySize"
+                        type="number"
+                        min={1}
+                        max={space.capacity}
+                        {...register('partySize')}
+                      />
                       {errors.partySize && (
-                        <p className="text-sm text-destructive">{errors.partySize.message}</p>
+                        <p className="text-sm text-destructive">
+                          {errors.partySize.message}
+                        </p>
                       )}
                     </div>
                     <div className="grid gap-1.5">
@@ -205,8 +252,13 @@ export function SpaceDetailsPage() {
                       <Textarea id="notes" rows={2} {...register('notes')} />
                     </div>
                     <DialogFooter>
-                      <Button type="submit" disabled={isSubmitting || createBooking.isPending}>
-                        {createBooking.isPending ? 'Submitting...' : 'Submit request'}
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting || createBooking.isPending}
+                      >
+                        {createBooking.isPending
+                          ? 'Submitting...'
+                          : 'Submit request'}
                       </Button>
                     </DialogFooter>
                   </form>

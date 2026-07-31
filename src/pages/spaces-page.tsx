@@ -1,12 +1,18 @@
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
 import { Search } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useDebounce } from '@/hooks/use-debounce';
 import { spacesApi } from '@/lib/spaces-api';
@@ -23,19 +29,29 @@ const SPACE_TYPES: { value: SpaceType | ''; label: string }[] = [
 export function SpacesPage() {
   const [search, setSearch] = useState('');
   const [type, setType] = useState<SpaceType | ''>('');
+  const [date, setDate] = useState('');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['spaces', { search: debouncedSearch, type, page }],
-    queryFn: () => spacesApi.list({ search: debouncedSearch || undefined, type: type || undefined, page, limit: 9 }),
+    queryKey: ['spaces', { search: debouncedSearch, type, date, page }],
+    queryFn: () =>
+      spacesApi.list({
+        search: debouncedSearch || undefined,
+        type: type || undefined,
+        date: date || undefined,
+        page,
+        limit: 9,
+      }),
   });
 
   return (
     <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-2xl font-semibold">Browse spaces</h1>
-        <p className="text-muted-foreground">Find a desk, room, or hall that fits your needs.</p>
+        <p className="text-muted-foreground">
+          Find a desk, room, or hall that fits your needs.
+        </p>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -67,9 +83,28 @@ export function SpacesPage() {
             </option>
           ))}
         </Select>
+        <Input
+          type="date"
+          className="sm:w-48"
+          value={date}
+          onChange={(e) => {
+            setDate(e.target.value);
+            setPage(1);
+          }}
+          aria-label="Only show spaces free on this date"
+        />
+        {date && (
+          <Button variant="ghost" size="sm" onClick={() => setDate('')}>
+            Clear date
+          </Button>
+        )}
       </div>
 
-      {isError && <p className="text-destructive">Could not load spaces. Please try again.</p>}
+      {isError && (
+        <p className="text-destructive">
+          Could not load spaces. Please try again.
+        </p>
+      )}
 
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -85,7 +120,9 @@ export function SpacesPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base">{space.name}</CardTitle>
-                    <Badge variant="secondary">{space.type.replace('_', ' ')}</Badge>
+                    <Badge variant="secondary">
+                      {space.type.replace('_', ' ')}
+                    </Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 text-sm text-muted-foreground">
@@ -107,7 +144,12 @@ export function SpacesPage() {
           </div>
 
           <div className="flex items-center justify-center gap-3">
-            <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
               Previous
             </Button>
             <span className="text-sm text-muted-foreground">
@@ -124,7 +166,9 @@ export function SpacesPage() {
           </div>
         </>
       ) : (
-        <p className="py-12 text-center text-muted-foreground">No spaces match your search.</p>
+        <p className="py-12 text-center text-muted-foreground">
+          No spaces match your search.
+        </p>
       )}
     </div>
   );
