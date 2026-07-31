@@ -51,7 +51,11 @@ body {
   margin: 0;
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  font:
+    16px/1.5 system-ui,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
 }
 
 #root {
