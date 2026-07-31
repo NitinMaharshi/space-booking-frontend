@@ -32,10 +32,10 @@ npm run dev              # http://localhost:5173
 
 Assuming the backend's been seeded (`npm run db:seed` in the backend repo):
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@cospace.dev` | `Password@123` |
-| Member | `bob@cospace.dev` | `Password@123` |
+| Role   | Email               | Password       |
+| ------ | ------------------- | -------------- |
+| Admin  | `admin@cospace.dev` | `Password@123` |
+| Member | `bob@cospace.dev`   | `Password@123` |
 | Member | `carla@cospace.dev` | `Password@123` |
 
 ## Roles & core features
