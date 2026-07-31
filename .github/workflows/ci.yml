@@ -84,7 +84,6 @@ jobs:
       THROTTLE_LIMIT: '1000'
       AUTH_THROTTLE_TTL: '60000'
       AUTH_THROTTLE_LIMIT: '1000'
-      NODE_ENV: production
       PORT: '3000'
 
     steps:
@@ -100,6 +99,12 @@ jobs:
 
       - name: Start backend from GHCR image
         if: ${{ !inputs.api_url }}
+        # NODE_ENV=production is scoped to this step only — job-level would
+        # also poison the npm ci step above: npm treats an ambient
+        # NODE_ENV=production as an implicit --omit=dev, and the `husky`
+        # prepare script isn't a prod dependency.
+        env:
+          NODE_ENV: production
         run: |
           docker pull "$BACKEND_IMAGE"
           docker run --rm --network host -e DATABASE_URL "$BACKEND_IMAGE" npx prisma migrate deploy
