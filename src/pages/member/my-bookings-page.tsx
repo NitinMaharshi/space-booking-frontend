@@ -1,13 +1,13 @@
-import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { BookingsTable } from '@/components/bookings-table';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BookingsTable } from '@/components/bookings-table';
-import { bookingsApi } from '@/lib/bookings-api';
 import { getApiErrorMessage } from '@/lib/api';
-import type { BookingStatus } from '@/types';
+import { bookingsApi } from '@/lib/bookings-api';
+import type { Booking, BookingStatus, PaginatedResult } from '@/types';
 
 const STATUSES: { value: BookingStatus | ''; label: string }[] = [
   { value: '', label: 'All statuses' },
@@ -28,11 +28,33 @@ export function MyBookingsPage() {
 
   const cancelBooking = useMutation({
     mutationFn: (id: string) => bookingsApi.cancel(id),
-    onSuccess: () => {
-      toast.success('Booking cancelled');
-      queryClient.invalidateQueries({ queryKey: ['bookings'] });
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['bookings'] });
+      const previous = queryClient.getQueriesData<PaginatedResult<Booking>>({
+        queryKey: ['bookings'],
+      });
+      queryClient.setQueriesData<PaginatedResult<Booking>>(
+        { queryKey: ['bookings'] },
+        (old) =>
+          old
+            ? {
+                ...old,
+                items: old.items.map((b) =>
+                  b.id === id ? { ...b, status: 'CANCELLED' } : b,
+                ),
+              }
+            : old,
+      );
+      return { previous };
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, 'Could not cancel booking')),
+    onSuccess: () => toast.success('Booking cancelled'),
+    onError: (err, _id, context) => {
+      context?.previous.forEach(([key, data]) =>
+        queryClient.setQueryData(key, data),
+      );
+      toast.error(getApiErrorMessage(err, 'Could not cancel booking'));
+    },
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['bookings'] }),
   });
 
   return (
@@ -59,7 +81,8 @@ export function MyBookingsPage() {
         <BookingsTable
           bookings={data?.items ?? []}
           renderActions={(b) =>
-            (b.status === 'PENDING' || b.status === 'APPROVED') && new Date(b.startTime) > new Date() ? (
+            (b.status === 'PENDING' || b.status === 'APPROVED') &&
+            new Date(b.startTime) > new Date() ? (
               <Button
                 variant="outline"
                 size="sm"

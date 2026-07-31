@@ -1,11 +1,8 @@
-import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { BookingsTable } from '@/components/bookings-table';
 import { Button } from '@/components/ui/button';
-import { Select } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { BookingsTable } from '@/components/bookings-table';
-import { bookingsApi } from '@/lib/bookings-api';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { getApiErrorMessage } from '@/lib/api';
-import type { Booking, BookingStatus } from '@/types';
+import { bookingsApi } from '@/lib/bookings-api';
+import type { Booking, BookingStatus, PaginatedResult } from '@/types';
 
 const STATUSES: { value: BookingStatus | ''; label: string }[] = [
   { value: '', label: 'All statuses' },
@@ -37,26 +37,67 @@ export function ManageBookingsPage() {
     queryFn: () => bookingsApi.list({ status: status || undefined, limit: 50 }),
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['bookings'] });
+  const invalidate = () =>
+    queryClient.invalidateQueries({ queryKey: ['bookings'] });
+
+  const setBookingStatus = (
+    id: string,
+    next: BookingStatus,
+    extra: Partial<Booking> = {},
+  ) => {
+    const previous = queryClient.getQueriesData<PaginatedResult<Booking>>({
+      queryKey: ['bookings'],
+    });
+    queryClient.setQueriesData<PaginatedResult<Booking>>(
+      { queryKey: ['bookings'] },
+      (old) =>
+        old
+          ? {
+              ...old,
+              items: old.items.map((b) =>
+                b.id === id ? { ...b, status: next, ...extra } : b,
+              ),
+            }
+          : old,
+    );
+    return previous;
+  };
 
   const approve = useMutation({
     mutationFn: (id: string) => bookingsApi.approve(id),
-    onSuccess: () => {
-      toast.success('Booking approved');
-      invalidate();
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: ['bookings'] });
+      return { previous: setBookingStatus(id, 'APPROVED') };
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, 'Could not approve booking')),
+    onSuccess: () => toast.success('Booking approved'),
+    onError: (err, _id, context) => {
+      context?.previous.forEach(([key, data]) =>
+        queryClient.setQueryData(key, data),
+      );
+      toast.error(getApiErrorMessage(err, 'Could not approve booking'));
+    },
+    onSettled: invalidate,
   });
 
   const reject = useMutation({
     mutationFn: () => bookingsApi.reject(rejectTarget!.id, rejectionReason),
-    onSuccess: () => {
-      toast.success('Booking rejected');
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ['bookings'] });
+      const previous = setBookingStatus(rejectTarget!.id, 'REJECTED', {
+        rejectionReason,
+      });
       setRejectTarget(null);
       setRejectionReason('');
-      invalidate();
+      return { previous };
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, 'Could not reject booking')),
+    onSuccess: () => toast.success('Booking rejected'),
+    onError: (err, _vars, context) => {
+      context?.previous.forEach(([key, data]) =>
+        queryClient.setQueryData(key, data),
+      );
+      toast.error(getApiErrorMessage(err, 'Could not reject booking'));
+    },
+    onSettled: invalidate,
   });
 
   return (
@@ -85,10 +126,18 @@ export function ManageBookingsPage() {
           renderActions={(b) =>
             b.status === 'PENDING' ? (
               <div className="flex gap-2">
-                <Button size="sm" disabled={approve.isPending} onClick={() => approve.mutate(b.id)}>
+                <Button
+                  size="sm"
+                  disabled={approve.isPending}
+                  onClick={() => approve.mutate(b.id)}
+                >
                   Approve
                 </Button>
-                <Button size="sm" variant="destructive" onClick={() => setRejectTarget(b)}>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={() => setRejectTarget(b)}
+                >
                   Reject
                 </Button>
               </div>
@@ -97,7 +146,10 @@ export function ManageBookingsPage() {
         />
       )}
 
-      <Dialog open={!!rejectTarget} onOpenChange={(open) => !open && setRejectTarget(null)}>
+      <Dialog
+        open={!!rejectTarget}
+        onOpenChange={(open) => !open && setRejectTarget(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Reject booking</DialogTitle>
