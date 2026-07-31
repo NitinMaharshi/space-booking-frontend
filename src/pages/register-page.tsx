@@ -1,14 +1,20 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authApi } from '@/lib/auth-api';
 import { getApiErrorMessage } from '@/lib/api';
+import { authApi } from '@/lib/auth-api';
 import { useAuthStore } from '@/stores/auth-store';
 
 const schema = z.object({
@@ -17,7 +23,10 @@ const schema = z.object({
   password: z
     .string()
     .min(8, 'At least 8 characters')
-    .regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Include an uppercase letter, a lowercase letter, and a number'),
+    .regex(
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Include an uppercase letter, a lowercase letter, and a number',
+    ),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -47,24 +56,56 @@ export function RegisterPage() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Create an account</CardTitle>
-          <CardDescription>Join as a member to start booking spaces</CardDescription>
+          <CardDescription>
+            Join as a member to start booking spaces
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form
+            className="grid gap-4"
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+          >
             <div className="grid gap-1.5">
               <Label htmlFor="fullName">Full name</Label>
-              <Input id="fullName" autoComplete="name" {...register('fullName')} />
-              {errors.fullName && <p className="text-sm text-destructive">{errors.fullName.message}</p>}
+              <Input
+                id="fullName"
+                autoComplete="name"
+                {...register('fullName')}
+              />
+              {errors.fullName && (
+                <p className="text-sm text-destructive">
+                  {errors.fullName.message}
+                </p>
+              )}
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" {...register('email')} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
             <div className="grid gap-1.5">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" autoComplete="new-password" {...register('password')} />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                {...register('password')}
+              />
+              {errors.password && (
+                <p className="text-sm text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Creating account...' : 'Sign up'}
@@ -72,7 +113,7 @@ export function RegisterPage() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link to="/login" className="text-primary hover:underline">
+            <Link to="/login" className="text-primary underline">
               Log in
             </Link>
           </p>

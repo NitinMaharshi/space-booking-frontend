@@ -1,14 +1,20 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authApi } from '@/lib/auth-api';
 import { getApiErrorMessage } from '@/lib/api';
+import { authApi } from '@/lib/auth-api';
 import { useAuthStore } from '@/stores/auth-store';
 
 const schema = z.object({
@@ -21,7 +27,8 @@ export function LoginPage() {
   const setAuth = useAuthStore((s) => s.setAuth);
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: Location })?.from?.pathname ?? '/dashboard';
+  const from =
+    (location.state as { from?: Location })?.from?.pathname ?? '/dashboard';
 
   const {
     register,
@@ -48,21 +55,46 @@ export function LoginPage() {
           <CardDescription>Access your CoSpace account</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <form
+            className="grid gap-4"
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+          >
             <div className="grid gap-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" autoComplete="email" {...register('email')} />
-              {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                {...register('email')}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
             <div className="grid gap-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-primary underline"
+                >
                   Forgot password?
                 </Link>
               </div>
-              <Input id="password" type="password" autoComplete="current-password" {...register('password')} />
-              {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                {...register('password')}
+              />
+              {errors.password && (
+                <p className="text-sm text-destructive">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Logging in...' : 'Log in'}
@@ -70,7 +102,7 @@ export function LoginPage() {
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
             No account?{' '}
-            <Link to="/register" className="text-primary hover:underline">
+            <Link to="/register" className="text-primary underline">
               Sign up
             </Link>
           </p>
