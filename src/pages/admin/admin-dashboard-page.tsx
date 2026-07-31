@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { bookingsApi } from '@/lib/bookings-api';
-import { spacesApi } from '@/lib/spaces-api';
 import { maintenanceApi } from '@/lib/maintenance-api';
+import { spacesApi } from '@/lib/spaces-api';
 
 export function AdminDashboardPage() {
   const { data: pending } = useQuery({
@@ -20,9 +20,21 @@ export function AdminDashboardPage() {
   });
 
   const stats = [
-    { label: 'Pending approvals', value: pending?.meta.total ?? 0, to: '/admin/bookings' },
-    { label: 'Active spaces', value: spaces?.meta.total ?? 0, to: '/admin/spaces' },
-    { label: 'Maintenance windows', value: maintenance?.meta.total ?? 0, to: '/admin/maintenance' },
+    {
+      label: 'Pending approvals',
+      value: pending?.meta.total ?? 0,
+      to: '/admin/bookings',
+    },
+    {
+      label: 'Active spaces',
+      value: spaces?.meta.total ?? 0,
+      to: '/admin/spaces',
+    },
+    {
+      label: 'Maintenance windows',
+      value: maintenance?.meta.total ?? 0,
+      to: '/admin/maintenance',
+    },
   ];
 
   return (
@@ -35,7 +47,9 @@ export function AdminDashboardPage() {
               <CardHeader>
                 <CardTitle className="text-3xl">{s.value}</CardTitle>
               </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">{s.label}</CardContent>
+              <CardContent className="text-sm text-muted-foreground">
+                {s.label}
+              </CardContent>
             </Card>
           </Link>
         ))}

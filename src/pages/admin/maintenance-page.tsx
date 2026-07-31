@@ -1,16 +1,12 @@
-import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { toast } from 'sonner';
 import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
@@ -19,9 +15,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getApiErrorMessage } from '@/lib/api';
 import { maintenanceApi } from '@/lib/maintenance-api';
 import { spacesApi } from '@/lib/spaces-api';
-import { getApiErrorMessage } from '@/lib/api';
 
 const schema = z
   .object({
@@ -30,7 +30,10 @@ const schema = z
     endTime: z.string().min(1),
     reason: z.string().min(3).max(500),
   })
-  .refine((v) => v.endTime > v.startTime, { message: 'End must be after start', path: ['endTime'] });
+  .refine((v) => v.endTime > v.startTime, {
+    message: 'End must be after start',
+    path: ['endTime'],
+  });
 type FormValues = z.infer<typeof schema>;
 
 export function MaintenancePage() {
@@ -66,7 +69,8 @@ export function MaintenancePage() {
       reset();
       queryClient.invalidateQueries({ queryKey: ['maintenance'] });
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, 'Could not schedule maintenance')),
+    onError: (err) =>
+      toast.error(getApiErrorMessage(err, 'Could not schedule maintenance')),
   });
 
   const removeWindow = useMutation({
@@ -75,7 +79,10 @@ export function MaintenancePage() {
       toast.success('Maintenance window removed');
       queryClient.invalidateQueries({ queryKey: ['maintenance'] });
     },
-    onError: (err) => toast.error(getApiErrorMessage(err, 'Could not remove maintenance window')),
+    onError: (err) =>
+      toast.error(
+        getApiErrorMessage(err, 'Could not remove maintenance window'),
+      ),
   });
 
   return (
@@ -90,7 +97,11 @@ export function MaintenancePage() {
             <DialogHeader>
               <DialogTitle>Schedule a maintenance window</DialogTitle>
             </DialogHeader>
-            <form className="grid gap-4" onSubmit={handleSubmit((v) => createWindow.mutate(v))} noValidate>
+            <form
+              className="grid gap-4"
+              onSubmit={handleSubmit((v) => createWindow.mutate(v))}
+              noValidate
+            >
               <div className="grid gap-1.5">
                 <Label htmlFor="spaceId">Space</Label>
                 <Select id="spaceId" {...register('spaceId')} defaultValue="">
@@ -103,26 +114,53 @@ export function MaintenancePage() {
                     </option>
                   ))}
                 </Select>
-                {errors.spaceId && <p className="text-sm text-destructive">{errors.spaceId.message}</p>}
+                {errors.spaceId && (
+                  <p className="text-sm text-destructive">
+                    {errors.spaceId.message}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label htmlFor="startTime">Start</Label>
-                  <Input id="startTime" type="datetime-local" {...register('startTime')} />
+                  <Input
+                    id="startTime"
+                    type="datetime-local"
+                    {...register('startTime')}
+                  />
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="endTime">End</Label>
-                  <Input id="endTime" type="datetime-local" {...register('endTime')} />
-                  {errors.endTime && <p className="text-sm text-destructive">{errors.endTime.message}</p>}
+                  <Input
+                    id="endTime"
+                    type="datetime-local"
+                    {...register('endTime')}
+                  />
+                  {errors.endTime && (
+                    <p className="text-sm text-destructive">
+                      {errors.endTime.message}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="grid gap-1.5">
                 <Label htmlFor="reason">Reason</Label>
-                <Input id="reason" placeholder="HVAC servicing" {...register('reason')} />
-                {errors.reason && <p className="text-sm text-destructive">{errors.reason.message}</p>}
+                <Input
+                  id="reason"
+                  placeholder="HVAC servicing"
+                  {...register('reason')}
+                />
+                {errors.reason && (
+                  <p className="text-sm text-destructive">
+                    {errors.reason.message}
+                  </p>
+                )}
               </div>
               <DialogFooter>
-                <Button type="submit" disabled={isSubmitting || createWindow.isPending}>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting || createWindow.isPending}
+                >
                   {createWindow.isPending ? 'Scheduling...' : 'Schedule'}
                 </Button>
               </DialogFooter>
@@ -149,7 +187,8 @@ export function MaintenancePage() {
                 <tr key={w.id} className="border-t">
                   <td className="p-3">{w.space?.name ?? w.spaceId}</td>
                   <td className="p-3">
-                    {format(new Date(w.startTime), 'PP p')} – {format(new Date(w.endTime), 'p')}
+                    {format(new Date(w.startTime), 'PP p')} –{' '}
+                    {format(new Date(w.endTime), 'p')}
                   </td>
                   <td className="p-3">{w.reason}</td>
                   <td className="p-3">

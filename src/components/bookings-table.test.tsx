@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { BookingsTable } from './bookings-table';
 import type { Booking } from '@/types';
+import { BookingsTable } from './bookings-table';
 
 const baseBooking: Booking = {
   id: 'b1',
@@ -30,14 +30,29 @@ describe('BookingsTable', () => {
   });
 
   it('surfaces the rejection reason for rejected bookings', () => {
-    render(<BookingsTable bookings={[{ ...baseBooking, status: 'REJECTED', rejectionReason: 'No availability' }]} />);
+    render(
+      <BookingsTable
+        bookings={[
+          {
+            ...baseBooking,
+            status: 'REJECTED',
+            rejectionReason: 'No availability',
+          },
+        ]}
+      />,
+    );
     expect(screen.getByText('No availability')).toBeInTheDocument();
   });
 
   it('renders custom actions per row when provided', () => {
     render(
-      <BookingsTable bookings={[baseBooking]} renderActions={(b) => <button>Cancel {b.id}</button>} />,
+      <BookingsTable
+        bookings={[baseBooking]}
+        renderActions={(b) => <button>Cancel {b.id}</button>}
+      />,
     );
-    expect(screen.getByRole('button', { name: 'Cancel b1' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Cancel b1' }),
+    ).toBeInTheDocument();
   });
 });

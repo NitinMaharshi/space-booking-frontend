@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { describe, expect, it, beforeEach } from 'vitest';
-import { ProtectedRoute } from './protected-route';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { useAuthStore } from '@/stores/auth-store';
+import { ProtectedRoute } from './protected-route';
 
 function renderAt(path: string) {
   return render(
@@ -23,7 +23,11 @@ function renderAt(path: string) {
 
 describe('ProtectedRoute', () => {
   beforeEach(() => {
-    useAuthStore.setState({ user: null, accessToken: null, isInitializing: false });
+    useAuthStore.setState({
+      user: null,
+      accessToken: null,
+      isInitializing: false,
+    });
   });
 
   it('redirects to /login when there is no authenticated user', () => {
@@ -33,7 +37,13 @@ describe('ProtectedRoute', () => {
 
   it('renders the route once a user is present', () => {
     useAuthStore.setState({
-      user: { id: '1', email: 'a@b.com', fullName: 'A B', role: 'MEMBER' },
+      user: {
+        id: '1',
+        email: 'a@b.com',
+        fullName: 'A B',
+        role: 'MEMBER',
+        isEmailVerified: true,
+      },
       accessToken: 'token',
       isInitializing: false,
     });
@@ -43,7 +53,13 @@ describe('ProtectedRoute', () => {
 
   it('redirects a non-admin away from an admin-only route', () => {
     useAuthStore.setState({
-      user: { id: '1', email: 'a@b.com', fullName: 'A B', role: 'MEMBER' },
+      user: {
+        id: '1',
+        email: 'a@b.com',
+        fullName: 'A B',
+        role: 'MEMBER',
+        isEmailVerified: true,
+      },
       accessToken: 'token',
       isInitializing: false,
     });
@@ -52,7 +68,11 @@ describe('ProtectedRoute', () => {
   });
 
   it('shows a spinner while auth is still initializing', () => {
-    useAuthStore.setState({ user: null, accessToken: null, isInitializing: true });
+    useAuthStore.setState({
+      user: null,
+      accessToken: null,
+      isInitializing: true,
+    });
     renderAt('/dashboard');
     expect(screen.queryByText('Dashboard page')).not.toBeInTheDocument();
     expect(screen.queryByText('Login page')).not.toBeInTheDocument();

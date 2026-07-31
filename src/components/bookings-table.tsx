@@ -10,9 +10,17 @@ interface Props {
   renderActions?: (booking: Booking) => ReactNode;
 }
 
-export function BookingsTable({ bookings, showSpace = true, renderActions }: Props) {
+export function BookingsTable({
+  bookings,
+  showSpace = true,
+  renderActions,
+}: Props) {
   if (bookings.length === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">No bookings found.</p>;
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        No bookings found.
+      </p>
+    );
   }
 
   return (
@@ -30,15 +38,20 @@ export function BookingsTable({ bookings, showSpace = true, renderActions }: Pro
         <tbody>
           {bookings.map((b) => (
             <tr key={b.id} className="border-t">
-              {showSpace && <td className="p-3">{b.space?.name ?? b.spaceId}</td>}
+              {showSpace && (
+                <td className="p-3">{b.space?.name ?? b.spaceId}</td>
+              )}
               <td className="p-3">
-                {format(new Date(b.startTime), 'PP p')} – {format(new Date(b.endTime), 'p')}
+                {format(new Date(b.startTime), 'PP p')} –{' '}
+                {format(new Date(b.endTime), 'p')}
               </td>
               <td className="p-3">{b.partySize}</td>
               <td className="p-3">
                 <Badge variant={statusBadgeVariant[b.status]}>{b.status}</Badge>
                 {b.status === 'REJECTED' && b.rejectionReason && (
-                  <p className="mt-1 text-xs text-muted-foreground">{b.rejectionReason}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {b.rejectionReason}
+                  </p>
                 )}
               </td>
               {renderActions && <td className="p-3">{renderActions(b)}</td>}

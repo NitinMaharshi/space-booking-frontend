@@ -1,20 +1,29 @@
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useForm } from 'react-hook-form';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { authApi } from '@/lib/auth-api';
 import { getApiErrorMessage } from '@/lib/api';
+import { authApi } from '@/lib/auth-api';
 
 const schema = z.object({
   newPassword: z
     .string()
     .min(8, 'At least 8 characters')
-    .regex(/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Include an uppercase letter, a lowercase letter, and a number'),
+    .regex(
+      /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+      'Include an uppercase letter, a lowercase letter, and a number',
+    ),
 });
 type FormValues = z.infer<typeof schema>;
 
@@ -44,18 +53,33 @@ export function ResetPasswordPage() {
       <Card className="w-full">
         <CardHeader>
           <CardTitle>Reset your password</CardTitle>
-          <CardDescription>Choose a new password for your account</CardDescription>
+          <CardDescription>
+            Choose a new password for your account
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {!token ? (
-            <p className="text-sm text-destructive">Missing reset token. Use the link from your email.</p>
+            <p className="text-sm text-destructive">
+              Missing reset token. Use the link from your email.
+            </p>
           ) : (
-            <form className="grid gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <form
+              className="grid gap-4"
+              onSubmit={handleSubmit(onSubmit)}
+              noValidate
+            >
               <div className="grid gap-1.5">
                 <Label htmlFor="newPassword">New password</Label>
-                <Input id="newPassword" type="password" autoComplete="new-password" {...register('newPassword')} />
+                <Input
+                  id="newPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  {...register('newPassword')}
+                />
                 {errors.newPassword && (
-                  <p className="text-sm text-destructive">{errors.newPassword.message}</p>
+                  <p className="text-sm text-destructive">
+                    {errors.newPassword.message}
+                  </p>
                 )}
               </div>
               <Button type="submit" disabled={isSubmitting}>
