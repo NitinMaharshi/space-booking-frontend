@@ -1,5 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -58,6 +63,11 @@ export function SpaceDetailsPage() {
     queryKey: ['availability', id, date],
     queryFn: () => spacesApi.availability(id!, date),
     enabled: !!id,
+    // Keep showing the previously-selected date's data while the new
+    // date's request is in flight, instead of clearing to the Skeleton
+    // fallback — otherwise every date change flashes a blank loading
+    // state for a moment, even when the content ends up identical.
+    placeholderData: keepPreviousData,
   });
 
   const {
