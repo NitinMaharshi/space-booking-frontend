@@ -7,6 +7,7 @@ import { Link, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { DayAvailabilityTimeline } from '@/components/day-availability-timeline';
+import { TimeSlotPicker } from '@/components/time-slot-picker';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,20 +28,17 @@ import { bookingsApi } from '@/lib/bookings-api';
 import { spacesApi } from '@/lib/spaces-api';
 import { useAuthStore } from '@/stores/auth-store';
 
-const bookingSchema = z
-  .object({
-    date: z.string().min(1, 'Choose a date'),
-    startTime: z.string().min(1, 'Choose a start time'),
-    endTime: z.string().min(1, 'Choose an end time'),
-    partySize: z.coerce.number().int().min(1),
-    notes: z.string().max(1000).optional(),
-  })
-  .refine((v) => v.endTime > v.startTime, {
-    message: 'End time must be after start time',
-    path: ['endTime'],
-  });
+const bookingSchema = z.object({
+  partySize: z.coerce.number().int().min(1),
+  notes: z.string().max(1000).optional(),
+});
 type BookingFormInput = z.input<typeof bookingSchema>;
 type BookingFormValues = z.output<typeof bookingSchema>;
+
+interface TimeRange {
+  startTime: string;
+  endTime: string;
+}
 
 export function SpaceDetailsPage() {
   const { id } = useParams<{ id: string }>();
@@ -48,6 +46,7 @@ export function SpaceDetailsPage() {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [selectedRange, setSelectedRange] = useState<TimeRange | null>(null);
 
   const { data: space, isLoading } = useQuery({
     queryKey: ['space', id],
@@ -68,17 +67,15 @@ export function SpaceDetailsPage() {
     formState: { errors, isSubmitting },
   } = useForm<BookingFormInput, unknown, BookingFormValues>({
     resolver: zodResolver(bookingSchema),
-    defaultValues: { date, partySize: 1 },
+    defaultValues: { partySize: 1 },
   });
 
   const createBooking = useMutation({
     mutationFn: (values: BookingFormValues) =>
       bookingsApi.create({
         spaceId: id!,
-        startTime: new Date(
-          `${values.date}T${values.startTime}:00`,
-        ).toISOString(),
-        endTime: new Date(`${values.date}T${values.endTime}:00`).toISOString(),
+        startTime: selectedRange!.startTime,
+        endTime: selectedRange!.endTime,
         partySize: values.partySize,
         notes: values.notes,
       }),
@@ -86,6 +83,7 @@ export function SpaceDetailsPage() {
       toast.success('Booking requested — awaiting admin approval');
       setOpen(false);
       reset();
+      setSelectedRange(null);
       queryClient.invalidateQueries({ queryKey: ['availability', id] });
       queryClient.invalidateQueries({ queryKey: ['bookings'] });
     },
@@ -180,7 +178,13 @@ export function SpaceDetailsPage() {
                 Admins manage bookings from the admin panel.
               </p>
             ) : (
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog
+                open={open}
+                onOpenChange={(o) => {
+                  setOpen(o);
+                  if (!o) setSelectedRange(null);
+                }}
+              >
                 <DialogTrigger asChild>
                   <Button className="w-full">Request booking</Button>
                 </DialogTrigger>
@@ -192,45 +196,35 @@ export function SpaceDetailsPage() {
                   </DialogHeader>
                   <form
                     className="grid gap-4"
-                    onSubmit={handleSubmit((v) => createBooking.mutate(v))}
+                    onSubmit={handleSubmit((v) => {
+                      if (!selectedRange) return;
+                      createBooking.mutate(v);
+                    })}
                     noValidate
                   >
+                    <p className="text-sm text-muted-foreground">
+                      Booking for{' '}
+                      <span className="font-medium text-foreground">
+                        {format(new Date(`${date}T00:00:00`), 'PPPP')}
+                      </span>{' '}
+                      — change the date using the availability picker above.
+                    </p>
                     <div className="grid gap-1.5">
-                      <Label htmlFor="date">Date</Label>
-                      <Input id="date" type="date" {...register('date')} />
-                      {errors.date && (
-                        <p className="text-sm text-destructive">
-                          {errors.date.message}
+                      <Label>Time slot</Label>
+                      <TimeSlotPicker
+                        date={date}
+                        bookings={availability?.bookings ?? []}
+                        maintenanceWindows={
+                          availability?.maintenanceWindows ?? []
+                        }
+                        value={selectedRange}
+                        onChange={setSelectedRange}
+                      />
+                      {!selectedRange && (
+                        <p className="text-sm text-muted-foreground">
+                          Pick an available time slot above.
                         </p>
                       )}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="startTime">Start</Label>
-                        <Input
-                          id="startTime"
-                          type="time"
-                          {...register('startTime')}
-                        />
-                        {errors.startTime && (
-                          <p className="text-sm text-destructive">
-                            {errors.startTime.message}
-                          </p>
-                        )}
-                      </div>
-                      <div className="grid gap-1.5">
-                        <Label htmlFor="endTime">End</Label>
-                        <Input
-                          id="endTime"
-                          type="time"
-                          {...register('endTime')}
-                        />
-                        {errors.endTime && (
-                          <p className="text-sm text-destructive">
-                            {errors.endTime.message}
-                          </p>
-                        )}
-                      </div>
                     </div>
                     <div className="grid gap-1.5">
                       <Label htmlFor="partySize">Party size</Label>
@@ -254,7 +248,11 @@ export function SpaceDetailsPage() {
                     <DialogFooter>
                       <Button
                         type="submit"
-                        disabled={isSubmitting || createBooking.isPending}
+                        disabled={
+                          isSubmitting ||
+                          createBooking.isPending ||
+                          !selectedRange
+                        }
                       >
                         {createBooking.isPending
                           ? 'Submitting...'

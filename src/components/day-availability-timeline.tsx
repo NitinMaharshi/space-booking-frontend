@@ -14,12 +14,16 @@ interface Props {
 const HOUR_HEIGHT = 32; // px
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-// Availability windows are computed server-side against UTC day boundaries
-// (T00:00:00.000Z–T23:59:59.999Z), so position blocks using UTC hours to
-// stay consistent with that boundary rather than the viewer's local time.
+// Position blocks using the viewer's local time, matching the labels
+// (formatted with date-fns, also local) and the TimeSlotPicker's local-hour
+// slots — a block's position and its displayed time now always agree.
+// Note: the server buckets a "day" by UTC boundaries, so for viewers far
+// from UTC a booking within a few hours of midnight can visually land on
+// the adjacent local day; correcting that fully would mean making the
+// availability endpoint timezone-aware, which is out of scope here.
 function hourOfDay(iso: string) {
   const d = new Date(iso);
-  return d.getUTCHours() + d.getUTCMinutes() / 60;
+  return d.getHours() + d.getMinutes() / 60;
 }
 
 export function DayAvailabilityTimeline({
