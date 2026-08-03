@@ -21,8 +21,10 @@ interface Props {
   onChange: (value: SelectedRange | null) => void;
 }
 
+const SLOT_MINUTES = 30;
+
 interface Slot {
-  hour: number;
+  index: number;
   start: Date;
   end: Date;
   status: 'available' | 'booked' | 'maintenance' | 'past';
@@ -32,11 +34,11 @@ function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date) {
   return aStart < bEnd && bStart < aEnd;
 }
 
-// One button per hour of the selected local day, disabled once it's
-// booked/under maintenance/in the past. Clicking a free slot right after
-// the current selection's end extends it by an hour; any other click
-// starts a fresh single-hour selection — a deliberately simple range
-// model (no drag-select) that still lets you build a multi-hour booking
+// One button per 30-minute slot of the selected local day, disabled once
+// it's booked/under maintenance/in the past. Clicking a free slot right
+// after the current selection's end extends it by 30 minutes; any other
+// click starts a fresh single-slot selection — a deliberately simple range
+// model (no drag-select) that still lets you build a multi-slot booking
 // one click at a time.
 export function TimeSlotPicker({
   date,
@@ -56,9 +58,15 @@ export function TimeSlotPicker({
       end: new Date(m.endTime),
     }));
 
-    return Array.from({ length: 24 }, (_, hour) => {
-      const start = new Date(`${date}T${String(hour).padStart(2, '0')}:00:00`);
-      const end = new Date(start.getTime() + 60 * 60 * 1000);
+    const slotsPerDay = (24 * 60) / SLOT_MINUTES;
+    return Array.from({ length: slotsPerDay }, (_, index) => {
+      const totalMinutes = index * SLOT_MINUTES;
+      const hour = Math.floor(totalMinutes / 60);
+      const minute = totalMinutes % 60;
+      const start = new Date(
+        `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`,
+      );
+      const end = new Date(start.getTime() + SLOT_MINUTES * 60 * 1000);
 
       let status: Slot['status'] = 'available';
       if (end <= now) {
@@ -72,7 +80,7 @@ export function TimeSlotPicker({
       ) {
         status = 'booked';
       }
-      return { hour, start, end, status };
+      return { index, start, end, status };
     });
   }, [date, bookings, maintenanceWindows]);
 
@@ -114,18 +122,18 @@ export function TimeSlotPicker({
 
   return (
     <div>
-      <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
+      <div className="grid grid-cols-4 gap-1.5 sm:grid-cols-6 md:grid-cols-8">
         {slots.map((slot) => {
           const label = statusLabel[slot.status];
           return (
             <Button
-              key={slot.hour}
+              key={slot.index}
               type="button"
               variant={isSelected(slot) ? 'default' : 'outline'}
               size="sm"
               disabled={slot.status !== 'available'}
               onClick={() => handleClick(slot)}
-              aria-label={`${format(slot.start, 'h a')}${label ? `, ${label}` : ''}`}
+              aria-label={`${format(slot.start, 'h:mm a')}${label ? `, ${label}` : ''}`}
               className={cn(
                 'text-xs',
                 slot.status === 'booked' &&
@@ -134,7 +142,7 @@ export function TimeSlotPicker({
                   'border-amber-500/40 text-amber-600/70 line-through',
               )}
             >
-              {format(slot.start, 'h a')}
+              {format(slot.start, 'h:mm a')}
             </Button>
           );
         })}

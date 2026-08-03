@@ -16,7 +16,7 @@ describe('TimeSlotPicker', () => {
     vi.useRealTimers();
   });
 
-  it('renders 24 hourly slots, all available with no bookings', () => {
+  it('renders 48 half-hour slots, all available with no bookings', () => {
     render(
       <TimeSlotPicker
         date={FUTURE_DATE}
@@ -27,8 +27,8 @@ describe('TimeSlotPicker', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: '12 AM' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: '11 PM' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '12:00 AM' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '11:30 PM' })).toBeEnabled();
   });
 
   it('disables a slot that overlaps an existing booking', () => {
@@ -38,7 +38,7 @@ describe('TimeSlotPicker', () => {
         bookings={[
           {
             startTime: `${FUTURE_DATE}T09:00:00`,
-            endTime: `${FUTURE_DATE}T10:00:00`,
+            endTime: `${FUTURE_DATE}T09:30:00`,
           },
         ]}
         maintenanceWindows={[]}
@@ -48,9 +48,9 @@ describe('TimeSlotPicker', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: '9 AM, already booked' }),
+      screen.getByRole('button', { name: '9:00 AM, already booked' }),
     ).toBeDisabled();
-    expect(screen.getByRole('button', { name: '10 AM' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '9:30 AM' })).toBeEnabled();
   });
 
   it('disables a slot under maintenance', () => {
@@ -61,7 +61,7 @@ describe('TimeSlotPicker', () => {
         maintenanceWindows={[
           {
             startTime: `${FUTURE_DATE}T14:00:00`,
-            endTime: `${FUTURE_DATE}T15:00:00`,
+            endTime: `${FUTURE_DATE}T14:30:00`,
           },
         ]}
         value={null}
@@ -70,11 +70,11 @@ describe('TimeSlotPicker', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: '2 PM, under maintenance' }),
+      screen.getByRole('button', { name: '2:00 PM, under maintenance' }),
     ).toBeDisabled();
   });
 
-  it('selects a single hour on click', () => {
+  it('selects a single half-hour slot on click', () => {
     const onChange = vi.fn();
     render(
       <TimeSlotPicker
@@ -86,11 +86,11 @@ describe('TimeSlotPicker', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '9 AM' }));
+    fireEvent.click(screen.getByRole('button', { name: '9:00 AM' }));
 
     expect(onChange).toHaveBeenCalledWith({
       startTime: new Date(`${FUTURE_DATE}T09:00:00`).toISOString(),
-      endTime: new Date(`${FUTURE_DATE}T10:00:00`).toISOString(),
+      endTime: new Date(`${FUTURE_DATE}T09:30:00`).toISOString(),
     });
   });
 
@@ -103,17 +103,17 @@ describe('TimeSlotPicker', () => {
         maintenanceWindows={[]}
         value={{
           startTime: new Date(`${FUTURE_DATE}T09:00:00`).toISOString(),
-          endTime: new Date(`${FUTURE_DATE}T10:00:00`).toISOString(),
+          endTime: new Date(`${FUTURE_DATE}T09:30:00`).toISOString(),
         }}
         onChange={onChange}
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: '10 AM' }));
+    fireEvent.click(screen.getByRole('button', { name: '9:30 AM' }));
 
     expect(onChange).toHaveBeenCalledWith({
       startTime: new Date(`${FUTURE_DATE}T09:00:00`).toISOString(),
-      endTime: new Date(`${FUTURE_DATE}T11:00:00`).toISOString(),
+      endTime: new Date(`${FUTURE_DATE}T10:00:00`).toISOString(),
     });
 
     rerender(
@@ -123,13 +123,13 @@ describe('TimeSlotPicker', () => {
         maintenanceWindows={[]}
         value={{
           startTime: new Date(`${FUTURE_DATE}T09:00:00`).toISOString(),
-          endTime: new Date(`${FUTURE_DATE}T11:00:00`).toISOString(),
+          endTime: new Date(`${FUTURE_DATE}T10:00:00`).toISOString(),
         }}
         onChange={onChange}
       />,
     );
     expect(
-      screen.getByText('Selected: 9:00 AM – 11:00 AM'),
+      screen.getByText('Selected: 9:00 AM – 10:00 AM'),
     ).toBeInTheDocument();
   });
 
@@ -146,8 +146,8 @@ describe('TimeSlotPicker', () => {
     );
 
     expect(
-      screen.getByRole('button', { name: '9 AM, time has passed' }),
+      screen.getByRole('button', { name: '10:00 AM, time has passed' }),
     ).toBeDisabled();
-    expect(screen.getByRole('button', { name: '11 AM' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: '10:30 AM' })).toBeEnabled();
   });
 });

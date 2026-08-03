@@ -106,7 +106,7 @@ describe('SpaceDetailsPage', () => {
       await screen.findByRole('button', { name: 'Request booking' }),
     );
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByRole('button', { name: '2 PM' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '2:00 PM' }));
     fireEvent.click(
       within(dialog).getByRole('button', { name: 'Submit request' }),
     );
@@ -116,7 +116,7 @@ describe('SpaceDetailsPage', () => {
       spaceId: 's1',
       partySize: 1,
       startTime: new Date('2026-09-10T14:00:00').toISOString(),
-      endTime: new Date('2026-09-10T15:00:00').toISOString(),
+      endTime: new Date('2026-09-10T14:30:00').toISOString(),
     });
 
     vi.useRealTimers();

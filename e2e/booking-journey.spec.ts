@@ -19,7 +19,7 @@ test.describe('Booking journey', () => {
     await page.goto('/spaces');
     await page.getByRole('link', { name: 'View details' }).first().click();
 
-    // Pick a random far-future date so every hourly slot that day is free —
+    // Pick a random far-future date so every half-hour slot that day is free —
     // both from seeded bookings and from this same test's own bookings on
     // a previous run (a fixed offset would land on the same day every time
     // the suite runs on a given day, colliding with its own leftover data).
@@ -32,7 +32,7 @@ test.describe('Booking journey', () => {
 
     await page.getByRole('button', { name: 'Request booking' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByRole('button', { name: '9 AM' }).click();
+    await dialog.getByRole('button', { name: '9:00 AM' }).click();
     await dialog.getByRole('button', { name: 'Submit request' }).click();
 
     await expect(page.getByText('Booking requested')).toBeVisible();

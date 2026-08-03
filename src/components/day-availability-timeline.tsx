@@ -11,12 +11,18 @@ interface Props {
   }[];
 }
 
-const HOUR_HEIGHT = 32; // px
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const PX_PER_HOUR = 32;
+const TICK_MINUTES = 30;
+const TICK_HEIGHT = (PX_PER_HOUR * TICK_MINUTES) / 60;
+const TICKS = Array.from(
+  { length: (24 * 60) / TICK_MINUTES },
+  (_, i) => i * TICK_MINUTES,
+);
 
 // Position blocks using the viewer's local time, matching the labels
-// (formatted with date-fns, also local) and the TimeSlotPicker's local-hour
-// slots — a block's position and its displayed time now always agree.
+// (formatted with date-fns, also local) and the TimeSlotPicker's
+// half-hour slots — a block's position and its displayed time now
+// always agree.
 // Note: the server buckets a "day" by UTC boundaries, so for viewers far
 // from UTC a booking within a few hours of midnight can visually land on
 // the adjacent local day; correcting that fully would mean making the
@@ -54,19 +60,24 @@ export function DayAvailabilityTimeline({
   return (
     <div className="flex max-h-96 overflow-y-auto text-xs">
       <div className="w-14 shrink-0">
-        {HOURS.map((h) => (
+        {TICKS.map((minutes) => (
           <div
-            key={h}
-            style={{ height: HOUR_HEIGHT }}
+            key={minutes}
+            style={{ height: TICK_HEIGHT }}
             className="border-t pr-2 text-right text-muted-foreground"
           >
-            {String(h).padStart(2, '0')}:00
+            {String(Math.floor(minutes / 60)).padStart(2, '0')}:
+            {String(minutes % 60).padStart(2, '0')}
           </div>
         ))}
       </div>
       <div className="relative flex-1 border-l">
-        {HOURS.map((h) => (
-          <div key={h} style={{ height: HOUR_HEIGHT }} className="border-t" />
+        {TICKS.map((minutes) => (
+          <div
+            key={minutes}
+            style={{ height: TICK_HEIGHT }}
+            className="border-t"
+          />
         ))}
         {blocks.map((b) => {
           const start = Math.max(0, hourOfDay(b.startTime));
@@ -78,8 +89,8 @@ export function DayAvailabilityTimeline({
             <div
               key={b.id}
               style={{
-                top: start * HOUR_HEIGHT,
-                height: (end - start) * HOUR_HEIGHT,
+                top: start * PX_PER_HOUR,
+                height: (end - start) * PX_PER_HOUR,
               }}
               className={cn(
                 'absolute left-1 right-1 overflow-hidden rounded px-1.5 py-0.5 text-white',
