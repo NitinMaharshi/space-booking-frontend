@@ -43,6 +43,19 @@ export interface Booking {
   createdAt: string;
 }
 
+export type NotificationType =
+  'BOOKING_CREATED' | 'BOOKING_APPROVED' | 'BOOKING_REJECTED';
+
+export interface Notification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  message: string;
+  bookingId: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
 export interface MaintenanceWindow {
   id: string;
   spaceId: string;
