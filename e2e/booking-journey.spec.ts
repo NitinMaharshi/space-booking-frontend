@@ -18,12 +18,21 @@ test.describe('Booking journey', () => {
 
     await page.goto('/spaces');
     await page.getByRole('link', { name: 'View details' }).first().click();
-    await page.getByRole('button', { name: 'Request booking' }).click();
 
+    // Pick a random far-future date so every half-hour slot that day is free —
+    // both from seeded bookings and from this same test's own bookings on
+    // a previous run (a fixed offset would land on the same day every time
+    // the suite runs on a given day, colliding with its own leftover data).
+    const farFuture = new Date();
+    farFuture.setDate(
+      farFuture.getDate() + 60 + Math.floor(Math.random() * 300),
+    );
+    const farFutureIso = farFuture.toISOString().slice(0, 10);
+    await page.getByLabel('Check availability for date').fill(farFutureIso);
+
+    await page.getByRole('button', { name: 'Request booking' }).click();
     const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Date').fill('2026-09-01');
-    await dialog.getByLabel('Start').fill('11:00');
-    await dialog.getByLabel('End').fill('12:00');
+    await dialog.getByRole('button', { name: '9:00 AM' }).click();
     await dialog.getByRole('button', { name: 'Submit request' }).click();
 
     await expect(page.getByText('Booking requested')).toBeVisible();

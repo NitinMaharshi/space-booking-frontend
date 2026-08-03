@@ -1,6 +1,5 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { bookingsApi } from '@/lib/bookings-api';
 import { spacesApi } from '@/lib/spaces-api';
 import { useAuthStore } from '@/stores/auth-store';
@@ -49,6 +48,10 @@ describe('SpaceDetailsPage', () => {
     });
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('renders space details and amenities', async () => {
     renderWithProviders(<SpaceDetailsPage />, {
       route: '/spaces/s1',
@@ -73,43 +76,38 @@ describe('SpaceDetailsPage', () => {
   });
 
   it('submits a booking request through the dialog', async () => {
+    // Fixed "now" so today's default date and which hourly slots count as
+    // upcoming (vs. already passed) are deterministic regardless of when
+    // the test actually runs. shouldAdvanceTime keeps real timers ticking
+    // for Testing Library's internal async polling (findBy/waitFor).
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-09-10T08:00:00'));
+
     vi.mocked(bookingsApi.create).mockResolvedValue({
       id: 'b1',
       spaceId: 's1',
       memberId: 'm1',
       status: 'PENDING',
       bookingDate: '2026-09-10',
-      startTime: '2026-09-10T09:00:00.000Z',
-      endTime: '2026-09-10T10:00:00.000Z',
+      startTime: '2026-09-10T14:00:00.000Z',
+      endTime: '2026-09-10T15:00:00.000Z',
       partySize: 1,
       notes: null,
       rejectionReason: null,
       createdAt: '2026-08-01T00:00:00.000Z',
     });
 
-    const user = userEvent.setup();
     renderWithProviders(<SpaceDetailsPage />, {
       route: '/spaces/s1',
       path: '/spaces/:id',
     });
 
-    await user.click(
+    fireEvent.click(
       await screen.findByRole('button', { name: 'Request booking' }),
     );
     const dialog = screen.getByRole('dialog');
-    // Native date/time inputs don't merge correctly with userEvent.type in
-    // jsdom (especially over an already-prefilled value) — fireEvent.change
-    // is the standard, reliable way to set them.
-    fireEvent.change(within(dialog).getByLabelText('Date'), {
-      target: { value: '2026-09-10' },
-    });
-    fireEvent.change(within(dialog).getByLabelText('Start'), {
-      target: { value: '09:00' },
-    });
-    fireEvent.change(within(dialog).getByLabelText('End'), {
-      target: { value: '10:00' },
-    });
-    await user.click(
+    fireEvent.click(within(dialog).getByRole('button', { name: '2:00 PM' }));
+    fireEvent.click(
       within(dialog).getByRole('button', { name: 'Submit request' }),
     );
 
@@ -117,7 +115,11 @@ describe('SpaceDetailsPage', () => {
     expect(vi.mocked(bookingsApi.create).mock.calls[0][0]).toMatchObject({
       spaceId: 's1',
       partySize: 1,
+      startTime: new Date('2026-09-10T14:00:00').toISOString(),
+      endTime: new Date('2026-09-10T14:30:00').toISOString(),
     });
+
+    vi.useRealTimers();
   });
 
   it('prompts a visitor to log in instead of showing the booking button', async () => {
